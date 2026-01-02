@@ -200,17 +200,52 @@ Our app differentiates by:
 - [x] Project initialized (Next.js + TypeScript + Tailwind)
 - [x] Supabase schema created
 - [x] GitHub repo connected
-- [x] Basic homepage with chord color legend
-- [ ] User needs to set up Supabase project and add credentials
-- [ ] Add Song form
-- [ ] Song view page
-- [ ] Library page
+- [x] Supabase project created and credentials added
+- [x] Database schema deployed to Supabase
+- [x] Add Song form (`/songs/new`)
+- [x] Song view page with visual chord blocks (`/songs/[id]`)
+- [x] Library page (homepage)
+- [x] ChordBlock component with colors and tooltips
+- [x] AddNoteForm component for adding notes to songs
 
 ---
 
-## Next Session Checklist
+## Files Created
 
-1. Verify Supabase is connected
-2. Build Add Song form
-3. Build Song view page with chord visualization
-4. Test full flow: add song → view song → see chords
+```
+src/
+├── app/
+│   ├── page.tsx                 # Library/homepage
+│   ├── layout.tsx               # Root layout
+│   ├── globals.css              # Global styles + chord colors
+│   └── songs/
+│       ├── new/
+│       │   └── page.tsx         # Add Song form
+│       └── [id]/
+│           └── page.tsx         # Song view page
+├── components/
+│   ├── ChordBlock.tsx           # Visual chord block with color
+│   └── AddNoteForm.tsx          # Form to add notes to a song
+└── lib/
+    └── supabase.ts              # Supabase client + types
+```
+
+---
+
+## Next Steps
+
+1. **Test the app** - Run `npm run dev` and try adding a song
+2. **Add "I Am Not Magnificent"** as first test song
+3. **Vocabulary page** - Add/view music terms
+4. **Moments I Love** - Add form to song view page
+5. **Deploy to Vercel** when ready
+
+---
+
+## To Run Locally
+
+```bash
+cd ~/Documents/song-study
+npm run dev
+# Opens at http://localhost:3000
+```
