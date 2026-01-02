@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  /* Chord function colors */
+  --chord-I: #4ECDC4;
+  --chord-ii: #96CEB4;
+  --chord-iii: #FFEAA7;
+  --chord-IV: #DDA0DD;
+  --chord-V: #FF6B6B;
+  --chord-vi: #74B9FF;
+  --chord-vii: #FFB347;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
