@@ -202,11 +202,22 @@ Our app differentiates by:
 - [x] GitHub repo connected
 - [x] Supabase project created and credentials added
 - [x] Database schema deployed to Supabase
-- [x] Add Song form (`/songs/new`)
-- [x] Song view page with visual chord blocks (`/songs/[id]`)
+- [x] Add Song form with ChordPro input (`/songs/new`)
+- [x] Song view page with ChordPro rendering (`/songs/[id]`)
 - [x] Library page (homepage)
+- [x] ChordPro parser and renderer (lyrics + chords together)
 - [x] ChordBlock component with colors and tooltips
 - [x] AddNoteForm component for adding notes to songs
+
+---
+
+## BEFORE NEXT SESSION - Run this SQL in Supabase:
+
+```sql
+ALTER TABLE song_study ADD COLUMN chordpro_content TEXT;
+```
+
+This adds the field needed to store ChordPro formatted lyrics+chords.
 
 ---
 
@@ -220,22 +231,41 @@ src/
 │   ├── globals.css              # Global styles + chord colors
 │   └── songs/
 │       ├── new/
-│       │   └── page.tsx         # Add Song form
+│       │   └── page.tsx         # Add Song form (with ChordPro input + preview)
 │       └── [id]/
-│           └── page.tsx         # Song view page
+│           └── page.tsx         # Song view page (with ChordPro rendering)
 ├── components/
 │   ├── ChordBlock.tsx           # Visual chord block with color
+│   ├── ChordProRenderer.tsx     # Renders ChordPro format with colored chords
 │   └── AddNoteForm.tsx          # Form to add notes to a song
 └── lib/
-    └── supabase.ts              # Supabase client + types
+    ├── supabase.ts              # Supabase client + types
+    └── chordpro.ts              # ChordPro parser utilities
 ```
+
+---
+
+## ChordPro Format (how to enter songs)
+
+Put chords in [brackets] right before the word they play on:
+
+```
+[Verse 1]
+[C]Someway, baby, it's [Am]part of me a[G]part from me.
+[Am]You're laying [F]waste to Hallo[F]ween.
+
+[Chorus]
+[F]And at once I [Am]knew I was not mag[G]nificent
+```
+
+Section headers like [Verse 1], [Chorus] go on their own line.
 
 ---
 
 ## Next Steps
 
-1. **Test the app** - Run `npm run dev` and try adding a song
-2. **Add "I Am Not Magnificent"** as first test song
+1. **Run the ALTER TABLE SQL** in Supabase (see above)
+2. **Test the app** - Run `npm run dev` and try adding a song with ChordPro
 3. **Vocabulary page** - Add/view music terms
 4. **Moments I Love** - Add form to song view page
 5. **Deploy to Vercel** when ready

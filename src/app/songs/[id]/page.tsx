@@ -1,18 +1,8 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import ChordBlock from '@/components/ChordBlock'
+import ChordProRenderer from '@/components/ChordProRenderer'
 import AddNoteForm from '@/components/AddNoteForm'
-
-// Chord to Roman numeral mapping (simplified - assumes major key)
-const chordToRoman: Record<string, Record<string, string>> = {
-  'C': { 'C': 'I', 'Dm': 'ii', 'Em': 'iii', 'F': 'IV', 'G': 'V', 'Am': 'vi', 'Bdim': 'vii°', 'D': 'II', 'E': 'III', 'A': 'VI', 'B': 'VII' },
-  'G': { 'G': 'I', 'Am': 'ii', 'Bm': 'iii', 'C': 'IV', 'D': 'V', 'Em': 'vi', 'F#dim': 'vii°' },
-  'D': { 'D': 'I', 'Em': 'ii', 'F#m': 'iii', 'G': 'IV', 'A': 'V', 'Bm': 'vi', 'C#dim': 'vii°' },
-  'A': { 'A': 'I', 'Bm': 'ii', 'C#m': 'iii', 'D': 'IV', 'E': 'V', 'F#m': 'vi', 'G#dim': 'vii°' },
-  'E': { 'E': 'I', 'F#m': 'ii', 'G#m': 'iii', 'A': 'IV', 'B': 'V', 'C#m': 'vi', 'D#dim': 'vii°' },
-  'F': { 'F': 'I', 'Gm': 'ii', 'Am': 'iii', 'Bb': 'IV', 'C': 'V', 'Dm': 'vi', 'Edim': 'vii°' },
-}
 
 async function getSong(id: string) {
   const { data: song, error } = await supabase
@@ -23,19 +13,12 @@ async function getSong(id: string) {
 
   if (error || !song) return null
 
-  // Get study details
+  // Get study details (including chordpro_content)
   const { data: study } = await supabase
     .from('song_study')
     .select('*')
     .eq('song_id', id)
     .single()
-
-  // Get sections with chords
-  const { data: sections } = await supabase
-    .from('song_sections')
-    .select('*, song_chords(*)')
-    .eq('song_id', id)
-    .order('section_order')
 
   // Get notes
   const { data: notes } = await supabase
@@ -51,7 +34,7 @@ async function getSong(id: string) {
     .eq('song_id', id)
     .order('timestamp_seconds')
 
-  return { song, study, sections, notes, moments }
+  return { song, study, notes, moments }
 }
 
 export default async function SongPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,10 +45,9 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
-  const { song, study, sections, notes, moments } = data
+  const { song, study, notes, moments } = data
   const keyNote = study?.key_note || 'C'
   const keyQuality = study?.key_quality || 'major'
-  const romanMap = chordToRoman[keyNote] || chordToRoman['C']
 
   return (
     <main className="min-h-screen p-8">
@@ -92,7 +74,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           )}
         </div>
 
-        {/* YouTube Embed */}
+        {/* YouTube Link */}
         {song.youtube_url && (
           <div className="mb-8">
             <a
@@ -106,31 +88,17 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Chord Progression - Visual Blocks */}
-        {sections && sections.length > 0 && (
+        {/* Lyrics with Chords (ChordPro) */}
+        {study?.chordpro_content && (
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Chord Progression</h2>
-            {sections.map((section: any) => (
-              <div key={section.id} className="mb-6">
-                <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
-                  {section.section_name}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {section.song_chords
-                    ?.sort((a: any, b: any) => a.chord_order - b.chord_order)
-                    .map((chord: any) => {
-                      const roman = chord.roman_numeral || romanMap[chord.chord_name] || '?'
-                      return (
-                        <ChordBlock
-                          key={chord.id}
-                          chordName={chord.chord_name}
-                          romanNumeral={roman}
-                        />
-                      )
-                    })}
-                </div>
-              </div>
-            ))}
+            <h2 className="text-2xl font-semibold mb-4">Lyrics & Chords</h2>
+            <div className="p-6 rounded-lg bg-gray-900 border border-gray-800">
+              <ChordProRenderer
+                content={study.chordpro_content}
+                keyNote={keyNote}
+                showRomanNumerals={true}
+              />
+            </div>
           </div>
         )}
 

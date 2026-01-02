@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import ChordProRenderer from '@/components/ChordProRenderer'
 
 export default function AddSongPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -16,7 +18,7 @@ export default function AddSongPage() {
     youtube_url: '',
     key_note: '',
     key_quality: 'major' as 'major' | 'minor',
-    chord_progression: '', // Simple text for now, e.g., "C G Am F"
+    chordpro_content: '',
     my_reaction: '',
   })
 
@@ -39,7 +41,7 @@ export default function AddSongPage() {
 
       if (songError) throw songError
 
-      // 2. Create the song_study entry
+      // 2. Create the song_study entry with ChordPro content
       const { error: studyError } = await supabase
         .from('song_study')
         .insert({
@@ -47,40 +49,12 @@ export default function AddSongPage() {
           key_note: formData.key_note || null,
           key_quality: formData.key_quality,
           study_status: 'new',
+          chordpro_content: formData.chordpro_content || null,
         })
 
       if (studyError) throw studyError
 
-      // 3. If there's a chord progression, create a section and chords
-      if (formData.chord_progression.trim()) {
-        const { data: section, error: sectionError } = await supabase
-          .from('song_sections')
-          .insert({
-            song_id: song.id,
-            section_name: 'main',
-            section_order: 0,
-          })
-          .select()
-          .single()
-
-        if (sectionError) throw sectionError
-
-        // Parse chord progression (space-separated)
-        const chords = formData.chord_progression.trim().split(/\s+/)
-        const chordInserts = chords.map((chord, index) => ({
-          section_id: section.id,
-          chord_order: index,
-          chord_name: chord,
-        }))
-
-        const { error: chordsError } = await supabase
-          .from('song_chords')
-          .insert(chordInserts)
-
-        if (chordsError) throw chordsError
-      }
-
-      // 4. If there's a reaction, save it as a note
+      // 3. If there's a reaction, save it as a note
       if (formData.my_reaction.trim()) {
         const { error: noteError } = await supabase
           .from('song_notes')
@@ -102,6 +76,13 @@ export default function AddSongPage() {
       setLoading(false)
     }
   }
+
+  const exampleChordPro = `[Verse 1]
+[C]Someway, baby, it's [Am]part of me a[G]part from me.
+[Am]You're laying [F]waste to Hallo[F]ween.
+
+[Chorus]
+[F]And at once I [Am]knew I was not mag[G]nificent`
 
   return (
     <main className="min-h-screen p-8">
@@ -194,19 +175,40 @@ export default function AddSongPage() {
             </div>
           </div>
 
-          {/* Chord Progression */}
+          {/* ChordPro Content */}
           <div>
-            <label className="block text-sm font-medium mb-2">Chord Progression</label>
-            <input
-              type="text"
-              value={formData.chord_progression}
-              onChange={(e) => setFormData({ ...formData, chord_progression: e.target.value })}
-              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:border-teal-500 focus:outline-none"
-              placeholder="C G Am F (space-separated)"
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium">Lyrics with Chords</label>
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-sm text-teal-400 hover:text-teal-300"
+              >
+                {showPreview ? 'Hide Preview' : 'Show Preview'}
+              </button>
+            </div>
+            <textarea
+              value={formData.chordpro_content}
+              onChange={(e) => setFormData({ ...formData, chordpro_content: e.target.value })}
+              rows={10}
+              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:border-teal-500 focus:outline-none font-mono text-sm"
+              placeholder={exampleChordPro}
             />
             <p className="text-gray-500 text-sm mt-1">
-              Enter chords separated by spaces. You can add more detail later.
+              Put chords in [brackets] right before the word they play on.
+              Use [Verse 1], [Chorus], etc. on their own line for sections.
             </p>
+
+            {/* Preview */}
+            {showPreview && formData.chordpro_content && (
+              <div className="mt-4 p-4 rounded-lg bg-gray-900 border border-gray-700">
+                <p className="text-xs text-gray-500 mb-3">Preview:</p>
+                <ChordProRenderer
+                  content={formData.chordpro_content}
+                  keyNote={formData.key_note || 'C'}
+                />
+              </div>
+            )}
           </div>
 
           {/* Initial Reaction */}
